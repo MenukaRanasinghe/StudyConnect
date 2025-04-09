@@ -21,7 +21,7 @@ struct LoginPage: View {
                 .foregroundColor(Color(hex: "#4B7BEC"))
             
             Text("Please Sign In to continue.")
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.bold)
 
             Text("Email")
