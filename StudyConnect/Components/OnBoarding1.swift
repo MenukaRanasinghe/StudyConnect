@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @State private var currentPage = 0
+    @State private var onboardingCompleted=false
     
     let onboardingData = [
         ("OnBoarding1", "Find the perfect study group", "Join or create study groups based on your courses and interests!"),
@@ -17,58 +18,63 @@ struct OnboardingView: View {
            ]
     
     var body: some View {
-        VStack {
-            TabView(selection: $currentPage) {
-                ForEach(0..<onboardingData.count, id: \.self) { index in
-                    VStack(spacing: 20) {
-                        Image(onboardingData[index].0)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 300)
-
-                        Text(onboardingData[index].1)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.top, 15)
-                            .padding(.horizontal, 50)
-
-                        Text(onboardingData[index].2)
-                            .font(.body)
-                            .padding(.top, 10)
-                            .padding(.horizontal, 50)
-
-                        Button(action: {
-                            if currentPage == onboardingData.count - 1 {
-                                print("Onboarding Completed")
-                            } else {
-                                currentPage += 1
+        if onboardingCompleted{
+            LoginPage()
+        }
+        else{
+            VStack {
+                TabView(selection: $currentPage) {
+                    ForEach(0..<onboardingData.count, id: \.self) { index in
+                        VStack(spacing: 20) {
+                            Image(onboardingData[index].0)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 300)
+                            
+                            Text(onboardingData[index].1)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.top, 15)
+                                .padding(.horizontal, 50)
+                            
+                            Text(onboardingData[index].2)
+                                .font(.body)
+                                .padding(.top, 10)
+                                .padding(.horizontal, 50)
+                            
+                            Button(action: {
+                                if currentPage == onboardingData.count - 1 {
+                                    onboardingCompleted=true
+                                } else {
+                                    currentPage += 1
+                                }
+                            }) {
+                                Text(currentPage == onboardingData.count - 1 ? "Get Started" : "Next")
+                                    .fontWeight(.semibold)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
                             }
-                        }) {
-                            Text(currentPage == onboardingData.count - 1 ? "Get Started" : "Next")
-                                .fontWeight(.semibold)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
+                            .padding(.top, 30)
+                            .padding([.leading, .trailing], 50)
                         }
+                        .tag(index)
                         .padding(.top, 30)
-                        .padding([.leading, .trailing], 50)
                     }
-                    .tag(index)
-                    .padding(.top, 30)
                 }
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
-            
-            HStack(spacing: 10) {
-                ForEach(0..<onboardingData.count, id: \.self) { index in
-                    Circle()
-                        .fill(index == currentPage ? Color.blue : Color.gray.opacity(0.4))
-                        .frame(width: 12, height: 12) 
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+                
+                HStack(spacing: 10) {
+                    ForEach(0..<onboardingData.count, id: \.self) { index in
+                        Circle()
+                            .fill(index == currentPage ? Color.blue : Color.gray.opacity(0.4))
+                            .frame(width: 12, height: 12)
+                    }
                 }
+                .padding(.bottom, 30)
             }
-            .padding(.bottom, 30)
         }
     }
 }

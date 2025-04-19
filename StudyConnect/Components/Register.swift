@@ -83,9 +83,7 @@ struct RegisterPage: View {
             
             HStack {
                 Text("Already have an account ? ")
-                Button(action: {
-                    print("Navigating to Sign Up")
-                }) {
+                NavigationLink(destination:LoginPage() ) {
                     Text("Sign In")
                         .fontWeight(.semibold)
                         .foregroundColor(Color.blue)
