@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct RegisterPage: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isSecure = true
     
+    @Environment(\.managedObjectContext) private var viewContext
+
     var body: some View {
         VStack {
             Text("Sign Up")
@@ -67,7 +70,7 @@ struct RegisterPage: View {
             .padding(.horizontal, 20)
             
             Button(action: {
-                print("Logging in with \(email) and \(password)")
+                saveUserData(email: email, password: password)
             }) {
                 Text("Sign Up")
                     .fontWeight(.bold)
@@ -78,12 +81,12 @@ struct RegisterPage: View {
                     .cornerRadius(10)
             }
             .padding(.top, 30)
-            .padding(.bottom,20)
+            .padding(.bottom, 20)
             .padding(.horizontal, 20)
             
             HStack {
                 Text("Already have an account ? ")
-                NavigationLink(destination:LoginPage() ) {
+                NavigationLink(destination: LoginPage()) {
                     Text("Sign In")
                         .fontWeight(.semibold)
                         .foregroundColor(Color.blue)
@@ -95,7 +98,6 @@ struct RegisterPage: View {
             .padding(.top, 15)
             
             HStack {
-                
                 Button(action: {
                     print("Login in with Gmail")
                 }) {
@@ -131,6 +133,19 @@ struct RegisterPage: View {
             Spacer()
         }
         .padding(.horizontal, 20)
+    }
+
+    func saveUserData(email: String, password: String) {
+        let newUser = User(context: viewContext)
+        newUser.email = email
+        newUser.password = password
+
+        do {
+            try viewContext.save()
+            print("User saved to Core Data")
+        } catch {
+            print("Error saving user: \(error.localizedDescription)")
+        }
     }
 }
 
