@@ -6,10 +6,9 @@
 //
 
 import SwiftUI
-import CoreData
+import FirebaseAuth
 
 struct LoginPage: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @State private var email = ""
     @State private var password = ""
     @State private var isSecure = true
@@ -123,28 +122,16 @@ struct LoginPage: View {
     }
 
     private func loginUser() {
-        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "email == %@", email)
-
-        do {
-            let users = try viewContext.fetch(fetchRequest)
-            if let user = users.first {
-                if user.password == password {
-                    alertMessage = "Login successful!"
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        isLoggedIn = true
-                    }
-                } else {
-                    alertMessage = "Incorrect password."
-                    showAlert = true
-                }
-            } else {
-                alertMessage = "No account found with this email."
+        Auth.auth().signIn(withEmail: email, password: password) { result, error in
+            if let error = error {
+                alertMessage = "Login failed: \(error.localizedDescription)"
                 showAlert = true
+            } else {
+                alertMessage = "Login successful!"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isLoggedIn = true
+                }
             }
-        } catch {
-            alertMessage = "Login failed: \(error.localizedDescription)"
-            showAlert = true
         }
     }
 }
@@ -163,5 +150,4 @@ private func ImageButton(_ name: String) -> some View {
 
 #Preview {
     LoginPage()
-        .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
 }
