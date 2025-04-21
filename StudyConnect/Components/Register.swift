@@ -7,11 +7,15 @@
 
 import SwiftUI
 import CoreData
+import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 struct RegisterPage: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isSecure = true
+    @State private var errorMessage = ""
     
     @Environment(\.managedObjectContext) private var viewContext
 
@@ -70,7 +74,7 @@ struct RegisterPage: View {
             .padding(.horizontal, 20)
             
             Button(action: {
-                saveUserData(email: email, password: password)
+                registerUser(email: email, password: password)
             }) {
                 Text("Sign Up")
                     .fontWeight(.bold)
@@ -84,6 +88,12 @@ struct RegisterPage: View {
             .padding(.bottom, 20)
             .padding(.horizontal, 20)
             
+            if !errorMessage.isEmpty {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .padding(.top, 10)
+            }
+            
             HStack {
                 Text("Already have an account ? ")
                 NavigationLink(destination: LoginPage()) {
@@ -92,59 +102,38 @@ struct RegisterPage: View {
                         .foregroundColor(Color.blue)
                 }
             }
-            HStack {
-                Text("Or Continue With")
-            }
-            .padding(.top, 15)
-            
-            HStack {
-                Button(action: {
-                    print("Login in with Gmail")
-                }) {
-                    Image("gmail")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .padding(10)
-                }
-                
-                Button(action: {
-                    print("Login in with Facebook")
-                }) {
-                    Image("facebook")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .padding(10)
-                }
-                
-                Button(action: {
-                    print("Login in with Apple")
-                }) {
-                    Image("apple")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .padding(10)
-                }
-            }
-            .padding(.top, 30)
-            
             Spacer()
         }
         .padding(.horizontal, 20)
     }
 
-    func saveUserData(email: String, password: String) {
-        let newUser = User(context: viewContext)
-        newUser.email = email
-        newUser.password = password
+    func registerUser(email: String, password: String) {
+        Auth.auth().createUser(withEmail: email, password: password) { result, error in
+            if let error = error {
+                errorMessage = "Error creating user: \(error.localizedDescription)"
+                return
+            }
 
-        do {
-            try viewContext.save()
-            print("User saved to Core Data")
-        } catch {
-            print("Error saving user: \(error.localizedDescription)")
+            guard let uid = result?.user.uid else {
+                errorMessage = "Failed to retrieve user ID."
+                return
+            }
+
+            saveUserData(uid: uid, email: email)
+        }
+    }
+
+    func saveUserData(uid: String, email: String) {
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).setData([
+            "email": email,
+            "createdAt": Timestamp()
+        ]) { error in
+            if let error = error {
+                errorMessage = "Error saving user data to Firestore: \(error.localizedDescription)"
+            } else {
+                print("User data saved to Firestore")
+            }
         }
     }
 }
