@@ -12,7 +12,8 @@ struct GroupMeetingView: View {
     @State private var isRecording = false
     @State private var transcribedText = ""
     @State private var summary = ""
-
+    @State private var savedNotes: [String] = []
+    @State private var showPopup = false 
     private let speechRecognizer = SpeechRecognizer()
 
     var body: some View {
@@ -88,6 +89,7 @@ struct GroupMeetingView: View {
             Spacer()
 
             Button(action: {
+                showPopup = true
             }) {
                 Text("Leave Meeting")
                     .bold()
@@ -98,13 +100,30 @@ struct GroupMeetingView: View {
                     .cornerRadius(10)
             }
             .padding(.horizontal)
+
+            .alert(isPresented: $showPopup) {
+                Alert(
+                    title: Text("Leave Meeting"),
+                    message: Text("Would you like to summarize and save the meeting notes?"),
+                    primaryButton: .default(Text("Summarize and Save")) {
+                        saveNote()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
         }
         .padding()
     }
-
     func generateSummary(from text: String) -> String {
         let sentences = text.components(separatedBy: ". ").prefix(2)
         return sentences.joined(separator: ". ") + "."
+    }
+
+    func saveNote() {
+        if summary.isEmpty {
+            summary = generateSummary(from: transcribedText)
+        }
+        savedNotes.append(summary)
     }
 }
 
