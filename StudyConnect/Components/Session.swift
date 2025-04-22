@@ -1,0 +1,115 @@
+//
+//  Session.swift
+//  StudyConnect
+//
+//  Created by Menuka 046 on 2025-04-22.
+//
+
+import SwiftUI
+import Speech
+
+struct GroupMeetingView: View {
+    @State private var isRecording = false
+    @State private var transcribedText = ""
+    @State private var summary = ""
+
+    private let speechRecognizer = SpeechRecognizer()
+
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Spacer()
+                Button(action: {
+                    if isRecording {
+                        speechRecognizer.stopTranscribing()
+                        summary = generateSummary(from: transcribedText)
+                    } else {
+                        transcribedText = ""
+                        summary = ""
+                        speechRecognizer.startTranscribing { text in
+                            transcribedText = text
+                        }
+                    }
+                    isRecording.toggle()
+                }) {
+                    Label(isRecording ? "Stop Recording" : "Record Session", systemImage: isRecording ? "stop.circle.fill" : "mic.circle.fill")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(isRecording ? Color.red : Color.blue)
+                        .cornerRadius(10)
+                }
+            }
+            .padding(.top, 20)
+            .padding(.trailing, 20)
+
+            Text("Group Meeting")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Image(systemName: "person.3.sequence.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+                .foregroundColor(.blue)
+
+            Text("You're now in the group meeting room.")
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            if !transcribedText.isEmpty {
+                VStack(alignment: .leading) {
+                    Text("Transcription:")
+                        .font(.headline)
+                    ScrollView {
+                        Text(transcribedText)
+                            .font(.body)
+                            .foregroundColor(.black)
+                    }
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+            }
+
+            if !summary.isEmpty {
+                VStack(alignment: .leading) {
+                    Text("Summary:")
+                        .font(.headline)
+                    Text(summary)
+                        .foregroundColor(.black)
+                }
+                .padding()
+                .background(Color(.systemGray5))
+                .cornerRadius(10)
+            }
+
+            Spacer()
+
+            Button(action: {
+            }) {
+                Text("Leave Meeting")
+                    .bold()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .padding(.horizontal)
+        }
+        .padding()
+    }
+
+    func generateSummary(from text: String) -> String {
+        let sentences = text.components(separatedBy: ". ").prefix(2)
+        return sentences.joined(separator: ". ") + "."
+    }
+}
+
+struct GroupMeetingView_Previews: PreviewProvider {
+    static var previews: some View {
+        GroupMeetingView()
+    }
+}
