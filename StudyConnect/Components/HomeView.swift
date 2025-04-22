@@ -54,28 +54,33 @@ struct HomeView: View {
                 }
 
                 HStack(spacing: 16) {
-                    GradientGroupCardView(
-                        gradient: LinearGradient(
-                            gradient: Gradient(colors: [Color(hex: "1DD1A1").opacity(0.5), Color(hex: "1DD1A1")]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        title: "ABC",
-                        subtitle: "Accounting",
-                        members: "10+"
-                    )
+                    NavigationLink(destination: GroupDetailsView(groupName: "ABC")) {
+                        GradientGroupCardView(
+                            gradient: LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "1DD1A1").opacity(0.5), Color(hex: "1DD1A1")]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            title: "ABC",
+                            subtitle: "Accounting",
+                            members: "10+"
+                        )
+                    }
 
-                    GradientGroupCardView(
-                        gradient: LinearGradient(
-                            gradient: Gradient(colors: [Color(hex: "3498DB").opacity(0.5), Color(hex: "3498DB")]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        title: "Calculus",
-                        subtitle: "Mathematics",
-                        members: "30+"
-                    )
+                    NavigationLink(destination: GroupDetailsView(groupName: "Calculus")) {
+                        GradientGroupCardView(
+                            gradient: LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "3498DB").opacity(0.5), Color(hex: "3498DB")]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            title: "Calculus",
+                            subtitle: "Mathematics",
+                            members: "30+"
+                        )
+                    }
                 }
+
 
                 Text("Upcoming Session")
                     .font(.headline)
