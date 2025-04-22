@@ -7,12 +7,10 @@
 
 import SwiftUI
 import MapKit
+import CoreLocation
 
 struct FindView: View {
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 6.8500, longitude: 79.9500),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-    )
+    @StateObject private var locationManager = LocationManager()
 
     let pins = [
         ColoredPin(coordinate: CLLocationCoordinate2D(latitude: 6.8505, longitude: 79.9485), color: .green),
@@ -23,7 +21,9 @@ struct FindView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Map(coordinateRegion: $region, annotationItems: pins) { pin in
+            Map(coordinateRegion: $locationManager.region,
+                showsUserLocation: true,
+                annotationItems: pins) { pin in
                 MapAnnotation(coordinate: pin.coordinate) {
                     Circle()
                         .fill(pin.color.opacity(0.6))
@@ -65,6 +65,37 @@ struct FindView: View {
                 Spacer()
             }
             .padding(.top, 50)
+        }
+        .onAppear {
+            locationManager.requestPermission()
+        }
+    }
+}
+
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private var manager = CLLocationManager()
+
+    @Published var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 6.8500, longitude: 79.9500),
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    func requestPermission() {
+        manager.requestWhenInUseAuthorization()
+        manager.startUpdatingLocation()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            DispatchQueue.main.async {
+                self.region.center = location.coordinate
+            }
         }
     }
 }
