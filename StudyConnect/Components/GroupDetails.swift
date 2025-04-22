@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GroupDetailsView: View {
+    let groupName: String 
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -31,7 +33,7 @@ struct GroupDetailsView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Calculus")
+                Text(groupName)
                     .font(.title)
                     .fontWeight(.bold)
 
@@ -90,6 +92,6 @@ struct GroupDetailsView: View {
 
 struct GroupDetailsView_Previews: PreviewProvider {
     static var previews: some View {
-        GroupDetailsView()
+        GroupDetailsView(groupName: "Calculus")
     }
 }
