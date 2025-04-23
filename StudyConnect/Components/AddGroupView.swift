@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Firebase
+import FirebaseStorage
 import UIKit
 
 struct AddGroupView: View {
@@ -59,7 +61,7 @@ struct AddGroupView: View {
                 Spacer()
 
                 Button(action: {
-                    print("Group Created")
+                    saveGroupToFirebase()
                 }) {
                     Text("Create Group")
                         .foregroundColor(.white)
@@ -72,6 +74,59 @@ struct AddGroupView: View {
                 Spacer()
             }
             .padding()
+        }
+    }
+
+    func saveGroupToFirebase() {
+        guard !groupName.isEmpty, !groupDescription.isEmpty, !adminName.isEmpty else {
+            print("Please fill in all fields")
+            return
+        }
+
+        var groupData: [String: Any] = [
+            "groupName": groupName,
+            "groupDescription": groupDescription,
+            "adminName": adminName,
+            "selectedColor": selectedColor.toHex(),
+            "createdAt": Timestamp()
+        ]
+
+        if let image = groupImage, let imageData = image.jpegData(compressionQuality: 0.8) {
+            let imageID = UUID().uuidString
+            let storageRef = Storage.storage().reference().child("group_images/\(imageID).jpg")
+
+            storageRef.putData(imageData, metadata: nil) { metadata, error in
+                if let error = error {
+                    print("Image upload error: \(error.localizedDescription)")
+                    return
+                }
+
+                storageRef.downloadURL { url, error in
+                    if let error = error {
+                        print("Download URL error: \(error.localizedDescription)")
+                        return
+                    }
+
+                    if let url = url {
+                        groupData["groupImageUrl"] = url.absoluteString
+                        saveGroupToFirestore(groupData: groupData)
+                    }
+                }
+            }
+        } else {
+            saveGroupToFirestore(groupData: groupData)
+        }
+    }
+
+    func saveGroupToFirestore(groupData: [String: Any]) {
+        let db = Firestore.firestore()
+        db.collection("groups").addDocument(data: groupData) { error in
+            if let error = error {
+                print("Firestore save error: \(error.localizedDescription)")
+            } else {
+                print("✅ Group created successfully")
+                presentationMode.wrappedValue.dismiss()
+            }
         }
     }
 }
@@ -119,7 +174,16 @@ struct ImagePickerControllerWrapper: UIViewControllerRepresentable {
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+}
+
+extension Color {
+    func toHex() -> String {
+        let uiColor = UIColor(self)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        let rgb = (Int)(red * 255) << 16 | (Int)(green * 255) << 8 | (Int)(blue * 255)
+        return String(format: "#%06x", rgb)
     }
 }
 
