@@ -6,9 +6,19 @@
 //
 
 import SwiftUI
+import Firebase
+
+struct GroupModel: Identifiable {
+    var id: String
+    var name: String
+    var description: String
+    var members: String
+    var colorHex: String
+}
 
 struct HomeView: View {
     @State private var isShowingAddGroup = false
+    @State private var groups: [GroupModel] = []
 
     var body: some View {
         NavigationView {
@@ -59,31 +69,26 @@ struct HomeView: View {
                     }
                 }
 
-                HStack(spacing: 16) {
-                    NavigationLink(destination: GroupDetailsView(groupName: "ABC")) {
-                        GradientGroupCardView(
-                            gradient: LinearGradient(
-                                gradient: Gradient(colors: [Color(hex: "1DD1A1").opacity(0.5), Color(hex: "1DD1A1")]),
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(groups) { group in
+                            let gradient = LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color(hex: group.colorHex).opacity(0.5),
+                                    Color(hex: group.colorHex)
+                                ]),
                                 startPoint: .top,
                                 endPoint: .bottom
-                            ),
-                            title: "ABC",
-                            subtitle: "Accounting",
-                            members: "10+"
-                        )
-                    }
-
-                    NavigationLink(destination: GroupDetailsView(groupName: "Calculus")) {
-                        GradientGroupCardView(
-                            gradient: LinearGradient(
-                                gradient: Gradient(colors: [Color(hex: "3498DB").opacity(0.5), Color(hex: "3498DB")]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            title: "Calculus",
-                            subtitle: "Mathematics",
-                            members: "30+"
-                        )
+                            )
+                            NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
+                                GradientGroupCardView(
+                                    gradient: gradient,
+                                    title: group.name,
+                                    subtitle: group.description,
+                                    members: group.members
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -96,6 +101,31 @@ struct HomeView: View {
             }
             .padding()
             .navigationBarHidden(true)
+            .onAppear {
+                fetchGroups()
+            }
+        }
+    }
+
+    func fetchGroups() {
+        let db = Firestore.firestore()
+        db.collection("groups").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching groups: \(error.localizedDescription)")
+                return
+            }
+
+            guard let documents = snapshot?.documents else { return }
+            self.groups = documents.map { doc in
+                let data = doc.data()
+                return GroupModel(
+                    id: doc.documentID,
+                    name: data["groupName"] as? String ?? "Unnamed",
+                    description: data["groupDescription"] as? String ?? "No Description",
+                    members: "10+",
+                    colorHex: data["selectedColor"] as? String ?? "#3498db"
+                )
+            }
         }
     }
 }
