@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State private var isShowingAddGroup = false
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 16) {
@@ -44,12 +46,16 @@ struct HomeView: View {
                         .font(.headline)
                     Spacer()
                     Button(action: {
+                        isShowingAddGroup = true
                     }) {
                         Image(systemName: "plus")
                             .foregroundColor(.white)
                             .padding(8)
                             .background(Color.blue)
                             .clipShape(Circle())
+                    }
+                    .sheet(isPresented: $isShowingAddGroup) {
+                        AddGroupView()
                     }
                 }
 
@@ -80,7 +86,6 @@ struct HomeView: View {
                         )
                     }
                 }
-
 
                 Text("Upcoming Session")
                     .font(.headline)
