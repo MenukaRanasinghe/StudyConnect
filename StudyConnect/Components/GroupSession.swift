@@ -15,7 +15,7 @@ struct GroupSessionsView: View {
     let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack(alignment: .top) {
                 Color(.systemGray6).edgesIgnoringSafeArea(.all)
 
@@ -81,9 +81,13 @@ struct GroupSessionsView: View {
 
                         HStack {
                             Spacer()
-                            NavigationLink(destination: AddSessionView(), isActive: $isShowingAddSession) {
+                            NavigationLink(value: "AddSession") {
                                 EmptyView()
                             }
+                            .navigationDestination(for: String.self) { _ in
+                                AddSessionView(groupName: "Calculus")
+                            }
+
                             Button(action: {
                                 isShowingAddSession = true
                             }) {

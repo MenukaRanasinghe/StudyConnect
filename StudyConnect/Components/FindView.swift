@@ -7,31 +7,33 @@
 
 import SwiftUI
 import MapKit
+import FirebaseFirestore
+import FirebaseCore
 import CoreLocation
 
 struct FindView: View {
     @StateObject private var locationManager = LocationManager()
-
-    let pins = [
-        ColoredPin(coordinate: CLLocationCoordinate2D(latitude: 6.8505, longitude: 79.9485), color: .green),
-        ColoredPin(coordinate: CLLocationCoordinate2D(latitude: 6.8510, longitude: 79.9490), color: .red),
-        ColoredPin(coordinate: CLLocationCoordinate2D(latitude: 6.8490, longitude: 79.9510), color: .green),
-        ColoredPin(coordinate: CLLocationCoordinate2D(latitude: 6.8520, longitude: 79.9500), color: .red)
-    ]
+    @State private var userPins: [UserPin] = []
 
     var body: some View {
         ZStack(alignment: .top) {
             Map(coordinateRegion: $locationManager.region,
                 showsUserLocation: true,
-                annotationItems: pins) { pin in
-                MapAnnotation(coordinate: pin.coordinate) {
-                    Circle()
-                        .fill(pin.color.opacity(0.6))
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Circle()
-                                .stroke(pin.color, lineWidth: 2)
-                        )
+                annotationItems: userPins) { user in
+                MapAnnotation(coordinate: user.coordinate) {
+                    VStack(spacing: 2) {
+                        Text(user.name)
+                            .font(.caption)
+                            .bold()
+                            .padding(5)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .shadow(radius: 2)
+
+                        Image(systemName: "mappin.and.ellipse")
+                            .font(.title2)
+                            .foregroundColor(.red)
+                    }
                 }
             }
             .ignoresSafeArea()
@@ -45,7 +47,6 @@ struct FindView: View {
 
                     Text("StudyConnect")
                         .font(.headline)
-                        .foregroundColor(.black)
 
                     Spacer()
 
@@ -68,6 +69,33 @@ struct FindView: View {
         }
         .onAppear {
             locationManager.requestPermission()
+            fetchUserPins()
+        }
+    }
+
+    func fetchUserPins() {
+        let db = Firestore.firestore()
+        db.collection("users").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching users: \(error.localizedDescription)")
+                return
+            }
+
+            var pins: [UserPin] = []
+
+            for document in snapshot?.documents ?? [] {
+                let data = document.data()
+                let name = data["name"] as? String ?? "Unknown"
+
+                if let geoPoint = data["location"] as? GeoPoint {
+                    let coordinate = CLLocationCoordinate2D(latitude: geoPoint.latitude, longitude: geoPoint.longitude)
+                    pins.append(UserPin(name: name, coordinate: coordinate))
+                }
+            }
+
+            DispatchQueue.main.async {
+                self.userPins = pins
+            }
         }
     }
 }
@@ -100,10 +128,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-struct ColoredPin: Identifiable {
+struct UserPin: Identifiable {
     let id = UUID()
+    let name: String
     let coordinate: CLLocationCoordinate2D
-    let color: Color
 }
 
 struct FindView_Previews: PreviewProvider {

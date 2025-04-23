@@ -6,96 +6,137 @@
 //
 
 import SwiftUI
+import Firebase
+
+struct GroupModel: Identifiable {
+    var id: String
+    var name: String
+    var description: String
+    var members: String
+    var colorHex: String
+}
 
 struct HomeView: View {
     @State private var isShowingAddGroup = false
+    @State private var groups: [GroupModel] = []
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 0) {
-                            Text("Hello, ")
-                                .font(.title2)
-                                .bold()
-                            Text("Shehani")
-                                .font(.title2)
-                                .foregroundColor(.blue)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 0) {
+                                Text("Hello, ")
+                                    .font(.title2)
+                                    .bold()
+                                Text("Shehani")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            Text("You have 5 sessions today.")
+                                .foregroundColor(.gray)
                         }
-                        Text("You have 5 sessions today.")
-                            .foregroundColor(.gray)
-                    }
-                    Spacer()
-                    Button("SOS") {
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.black)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                }
+                        Spacer()
+                        Button("SOS") {
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
 
-                TextField("Search Study Group", text: .constant(""))
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(10)
+                        NavigationLink(destination: NotificationsScreen()) {
+                            Image(systemName: "bell.fill")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 16)
+                        }
+                    }
 
-                HStack {
-                    Text("Explore Groups")
+                    TextField("Search Study Group", text: .constant(""))
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
+
+                    HStack {
+                        Text("Explore Groups")
+                            .font(.headline)
+                        Spacer()
+                        Button(action: {
+                            isShowingAddGroup = true
+                        }) {
+                            Image(systemName: "plus")
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                        }
+                        .sheet(isPresented: $isShowingAddGroup) {
+                            AddGroupView()
+                        }
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(groups) { group in
+                                let gradient = LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color(hex: group.colorHex).opacity(0.5),
+                                        Color(hex: group.colorHex)
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
+                                    GradientGroupCardView(
+                                        gradient: gradient,
+                                        title: group.name,
+                                        subtitle: group.description,
+                                        members: group.members
+                                    )
+                                }
+                            }
+                        }
+                        .padding(.vertical)
+                        .padding(.horizontal, 4)
+                    }
+
+                    Text("Upcoming Session")
                         .font(.headline)
+
+                    UpcomingSessionCard()
+
                     Spacer()
-                    Button(action: {
-                        isShowingAddGroup = true
-                    }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(.white)
-                            .padding(8)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                    }
-                    .sheet(isPresented: $isShowingAddGroup) {
-                        AddGroupView()
-                    }
                 }
-
-                HStack(spacing: 16) {
-                    NavigationLink(destination: GroupDetailsView(groupName: "ABC")) {
-                        GradientGroupCardView(
-                            gradient: LinearGradient(
-                                gradient: Gradient(colors: [Color(hex: "1DD1A1").opacity(0.5), Color(hex: "1DD1A1")]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            title: "ABC",
-                            subtitle: "Accounting",
-                            members: "10+"
-                        )
-                    }
-
-                    NavigationLink(destination: GroupDetailsView(groupName: "Calculus")) {
-                        GradientGroupCardView(
-                            gradient: LinearGradient(
-                                gradient: Gradient(colors: [Color(hex: "3498DB").opacity(0.5), Color(hex: "3498DB")]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            title: "Calculus",
-                            subtitle: "Mathematics",
-                            members: "30+"
-                        )
-                    }
-                }
-
-                Text("Upcoming Session")
-                    .font(.headline)
-
-                UpcomingSessionCard()
-
-                Spacer()
+                .padding()
             }
-            .padding()
             .navigationBarHidden(true)
+            .onAppear {
+                fetchGroups()
+            }
+        }
+    }
+
+    func fetchGroups() {
+        let db = Firestore.firestore()
+        db.collection("groups").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching groups: \(error.localizedDescription)")
+                return
+            }
+
+            guard let documents = snapshot?.documents else { return }
+            self.groups = documents.map { doc in
+                let data = doc.data()
+                return GroupModel(
+                    id: doc.documentID,
+                    name: data["groupName"] as? String ?? "Unnamed",
+                    description: data["groupDescription"] as? String ?? "No Description",
+                    members: "10+",
+                    colorHex: data["selectedColor"] as? String ?? "#3498db"
+                )
+            }
         }
     }
 }

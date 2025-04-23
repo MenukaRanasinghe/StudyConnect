@@ -74,6 +74,7 @@ struct AddGroupView: View {
                 Spacer()
             }
             .padding()
+            .navigationBarBackButtonHidden(false)
         }
     }
 
