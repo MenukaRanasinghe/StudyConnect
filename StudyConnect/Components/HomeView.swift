@@ -45,6 +45,13 @@ struct HomeView: View {
                         .background(Color.black)
                         .foregroundColor(.white)
                         .cornerRadius(8)
+
+                        NavigationLink(destination: NotificationsScreen()) {
+                            Image(systemName: "bell.fill")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 16)
+                        }
                     }
 
                     TextField("Search Study Group", text: .constant(""))
@@ -126,7 +133,7 @@ struct HomeView: View {
                     id: doc.documentID,
                     name: data["groupName"] as? String ?? "Unnamed",
                     description: data["groupDescription"] as? String ?? "No Description",
-                    members: "10+", 
+                    members: "10+",
                     colorHex: data["selectedColor"] as? String ?? "#3498db"
                 )
             }
