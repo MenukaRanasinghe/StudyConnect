@@ -22,84 +22,88 @@ struct HomeView: View {
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 0) {
-                            Text("Hello, ")
-                                .font(.title2)
-                                .bold()
-                            Text("Shehani")
-                                .font(.title2)
-                                .foregroundColor(.blue)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 0) {
+                                Text("Hello, ")
+                                    .font(.title2)
+                                    .bold()
+                                Text("Shehani")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            Text("You have 5 sessions today.")
+                                .foregroundColor(.gray)
                         }
-                        Text("You have 5 sessions today.")
-                            .foregroundColor(.gray)
+                        Spacer()
+                        Button("SOS") {
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                     }
-                    Spacer()
-                    Button("SOS") {
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.black)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                }
 
-                TextField("Search Study Group", text: .constant(""))
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(10)
+                    TextField("Search Study Group", text: .constant(""))
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
 
-                HStack {
-                    Text("Explore Groups")
-                        .font(.headline)
-                    Spacer()
-                    Button(action: {
-                        isShowingAddGroup = true
-                    }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(.white)
-                            .padding(8)
-                            .background(Color.blue)
-                            .clipShape(Circle())
+                    HStack {
+                        Text("Explore Groups")
+                            .font(.headline)
+                        Spacer()
+                        Button(action: {
+                            isShowingAddGroup = true
+                        }) {
+                            Image(systemName: "plus")
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                        }
+                        .sheet(isPresented: $isShowingAddGroup) {
+                            AddGroupView()
+                        }
                     }
-                    .sheet(isPresented: $isShowingAddGroup) {
-                        AddGroupView()
-                    }
-                }
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        ForEach(groups) { group in
-                            let gradient = LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color(hex: group.colorHex).opacity(0.5),
-                                    Color(hex: group.colorHex)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
-                                GradientGroupCardView(
-                                    gradient: gradient,
-                                    title: group.name,
-                                    subtitle: group.description,
-                                    members: group.members
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(groups) { group in
+                                let gradient = LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color(hex: group.colorHex).opacity(0.5),
+                                        Color(hex: group.colorHex)
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
                                 )
+                                NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
+                                    GradientGroupCardView(
+                                        gradient: gradient,
+                                        title: group.name,
+                                        subtitle: group.description,
+                                        members: group.members
+                                    )
+                                }
                             }
                         }
+                        .padding(.vertical)
+                        .padding(.horizontal, 4)
                     }
+
+                    Text("Upcoming Session")
+                        .font(.headline)
+
+                    UpcomingSessionCard()
+
+                    Spacer()
                 }
-
-                Text("Upcoming Session")
-                    .font(.headline)
-
-                UpcomingSessionCard()
-
-                Spacer()
+                .padding()
             }
-            .padding()
             .navigationBarHidden(true)
             .onAppear {
                 fetchGroups()
@@ -122,7 +126,7 @@ struct HomeView: View {
                     id: doc.documentID,
                     name: data["groupName"] as? String ?? "Unnamed",
                     description: data["groupDescription"] as? String ?? "No Description",
-                    members: "10+",
+                    members: "10+", 
                     colorHex: data["selectedColor"] as? String ?? "#3498db"
                 )
             }
