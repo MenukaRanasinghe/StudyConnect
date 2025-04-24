@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Firebase
+import FirebaseAuth
 
 struct GroupModel: Identifiable {
     var id: String
@@ -16,9 +17,20 @@ struct GroupModel: Identifiable {
     var colorHex: String
 }
 
+struct SessionModel: Identifiable {
+    var id: String
+    var title: String
+    var description: String
+    var time: String
+    var date: Date
+}
+
 struct HomeView: View {
     @State private var isShowingAddGroup = false
     @State private var groups: [GroupModel] = []
+    @State private var username: String = ""
+    @State private var todaySessionCount: Int = 0
+    @State private var upcomingSession: SessionModel?
 
     var body: some View {
         NavigationView {
@@ -30,15 +42,16 @@ struct HomeView: View {
                                 Text("Hello, ")
                                     .font(.title2)
                                     .bold()
-                                Text("Shehani")
+                                Text(username)
                                     .font(.title2)
                                     .foregroundColor(.blue)
                             }
-                            Text("You have 5 sessions today.")
+                            Text("You have \(todaySessionCount) session\(todaySessionCount == 1 ? "" : "s") today.")
                                 .foregroundColor(.gray)
                         }
                         Spacer()
                         Button("SOS") {
+                            // SOS button action
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -105,11 +118,15 @@ struct HomeView: View {
                     Text("Upcoming Session")
                         .font(.headline)
 
-                    NavigationLink(destination: GroupMeetingView()) {
-                        UpcomingSessionCard()
+                    if let session = upcomingSession {
+                        NavigationLink(destination: GroupMeetingView()) {
+                            UpcomingSessionCard(session: session)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    } else {
+                        Text("No upcoming sessions.")
+                            .foregroundColor(.gray)
                     }
-                    .buttonStyle(PlainButtonStyle())
-
 
                     Spacer()
                 }
@@ -117,7 +134,21 @@ struct HomeView: View {
             }
             .navigationBarHidden(true)
             .onAppear {
+                fetchUsername()
                 fetchGroups()
+                fetchSessions()
+            }
+        }
+    }
+
+    func fetchUsername() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).getDocument { document, error in
+            if let document = document, document.exists {
+                self.username = document.data()?["name"] as? String ?? "User"
+            } else {
+                print("User document not found")
             }
         }
     }
@@ -142,6 +173,55 @@ struct HomeView: View {
                 )
             }
         }
+    }
+
+    func fetchSessions() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+
+        db.collection("sessions")
+            .whereField("userId", isEqualTo: uid)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching sessions: \(error.localizedDescription)")
+                    return
+                }
+
+                let now = Date()
+                let calendar = Calendar.current
+                var todayCount = 0
+                var nextUpcoming: SessionModel?
+
+                snapshot?.documents.forEach { doc in
+                    let data = doc.data()
+                    if let timestamp = data["date"] as? Timestamp {
+                        let sessionDate = timestamp.dateValue()
+
+                        // Count if session is today
+                        if calendar.isDateInToday(sessionDate) {
+                            todayCount += 1
+                        }
+
+                        // Find next upcoming session
+                        if sessionDate > now {
+                            let newSession = SessionModel(
+                                id: doc.documentID,
+                                title: data["title"] as? String ?? "Untitled",
+                                description: data["description"] as? String ?? "",
+                                time: data["time"] as? String ?? "",
+                                date: sessionDate
+                            )
+
+                            if nextUpcoming == nil || sessionDate < nextUpcoming!.date {
+                                nextUpcoming = newSession
+                            }
+                        }
+                    }
+                }
+
+                self.todaySessionCount = todayCount
+                self.upcomingSession = nextUpcoming
+            }
     }
 }
 
@@ -180,17 +260,19 @@ struct GradientGroupCardView: View {
 }
 
 struct UpcomingSessionCard: View {
+    var session: SessionModel
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Calculus")
+                Text(session.title)
                     .font(.headline)
-                Text("Differential calculus Past Paper Discussion")
+                Text(session.description)
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
             Spacer()
-            Text("12.00 pm")
+            Text(session.time)
                 .foregroundColor(.gray)
         }
         .padding()
