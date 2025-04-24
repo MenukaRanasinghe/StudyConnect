@@ -8,6 +8,7 @@
 import SwiftUI
 import Firebase
 import FirebaseAuth
+import FirebaseFirestore
 
 struct GroupModel: Identifiable {
     var id: String
@@ -19,10 +20,9 @@ struct GroupModel: Identifiable {
 
 struct SessionModel: Identifiable {
     var id: String
-    var title: String
-    var description: String
-    var time: String
-    var date: Date
+    var sessionName: String
+    var groupName: String
+    var sessionDate: Date
 }
 
 struct HomeView: View {
@@ -36,96 +36,17 @@ struct HomeView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 0) {
-                                Text("Hello, ")
-                                    .font(.title2)
-                                    .bold()
-                                Text(username)
-                                    .font(.title2)
-                                    .foregroundColor(.blue)
-                            }
-                            Text("You have \(todaySessionCount) session\(todaySessionCount == 1 ? "" : "s") today.")
-                                .foregroundColor(.gray)
-                        }
-                        Spacer()
-                        Button("SOS") {
-                            // SOS button action
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.black)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-
-                        NavigationLink(destination: NotificationsScreen()) {
-                            Image(systemName: "bell.fill")
-                                .font(.title2)
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 16)
-                        }
-                    }
+                    headerSection
 
                     TextField("Search Study Group", text: .constant(""))
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(10)
 
-                    HStack {
-                        Text("Explore Groups")
-                            .font(.headline)
-                        Spacer()
-                        Button(action: {
-                            isShowingAddGroup = true
-                        }) {
-                            Image(systemName: "plus")
-                                .foregroundColor(.white)
-                                .padding(8)
-                                .background(Color.blue)
-                                .clipShape(Circle())
-                        }
-                        .sheet(isPresented: $isShowingAddGroup) {
-                            AddGroupView()
-                        }
-                    }
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            ForEach(groups) { group in
-                                let gradient = LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        Color(hex: group.colorHex).opacity(0.5),
-                                        Color(hex: group.colorHex)
-                                    ]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                                NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
-                                    GradientGroupCardView(
-                                        gradient: gradient,
-                                        title: group.name,
-                                        subtitle: group.description,
-                                        members: group.members
-                                    )
-                                }
-                            }
-                        }
-                        .padding(.vertical)
-                        .padding(.horizontal, 4)
-                    }
-
-                    Text("Upcoming Session")
-                        .font(.headline)
+                    exploreGroupsSection
 
                     if let session = upcomingSession {
-                        NavigationLink(destination: GroupMeetingView()) {
-                            UpcomingSessionCard(session: session)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    } else {
-                        Text("No upcoming sessions.")
-                            .foregroundColor(.gray)
+                        upcomingSessionSection(session: session)
                     }
 
                     Spacer()
@@ -136,32 +57,135 @@ struct HomeView: View {
             .onAppear {
                 fetchUsername()
                 fetchGroups()
-                fetchSessions()
+                fetchTodaySessionCount()
+                fetchUpcomingSession()
             }
         }
     }
 
+    var headerSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 0) {
+                    Text("Hello, ")
+                        .font(.title2)
+                        .bold()
+                    Text(username)
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                Text("You have \(todaySessionCount) session\(todaySessionCount == 1 ? "" : "s") today.")
+                    .foregroundColor(.gray)
+            }
+
+            Spacer()
+
+            Button("SOS") {
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.black)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+
+            NavigationLink(destination: NotificationsScreen()) {
+                Image(systemName: "bell.fill")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    var exploreGroupsSection: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Text("Explore Groups")
+                    .font(.headline)
+
+                Spacer()
+
+                Button(action: {
+                    isShowingAddGroup = true
+                }) {
+                    Image(systemName: "plus")
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                }
+                .sheet(isPresented: $isShowingAddGroup) {
+                    AddGroupView()
+                }
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(groups) { group in
+                        let gradient = LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color(hex: group.colorHex).opacity(0.5),
+                                Color(hex: group.colorHex)
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+
+                        NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
+                            GradientGroupCardView(
+                                gradient: gradient,
+                                title: group.name,
+                                subtitle: group.description,
+                                members: group.members
+                            )
+                        }
+                    }
+                }
+                .padding(.vertical)
+                .padding(.horizontal, 4)
+            }
+        }
+    }
+
+    func upcomingSessionSection(session: SessionModel) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Upcoming Session")
+                .font(.headline)
+                .padding(.top)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(session.sessionName)
+                    .font(.title2)
+                    .bold()
+
+                Text("Group: \(session.groupName)")
+                    .foregroundColor(.gray)
+
+                Text("Date: \(session.sessionDate.formatted(date: .abbreviated, time: .shortened))")
+                    .foregroundColor(.gray)
+            }
+            .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+        .padding(.bottom)
+    }
+
     func fetchUsername() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let db = Firestore.firestore()
-        db.collection("users").document(uid).getDocument { document, error in
+
+        Firestore.firestore().collection("users").document(uid).getDocument { document, error in
             if let document = document, document.exists {
                 self.username = document.data()?["name"] as? String ?? "User"
-            } else {
-                print("User document not found")
             }
         }
     }
 
     func fetchGroups() {
-        let db = Firestore.firestore()
-        db.collection("groups").getDocuments { snapshot, error in
-            if let error = error {
-                print("Error fetching groups: \(error.localizedDescription)")
-                return
-            }
-
+        Firestore.firestore().collection("groups").getDocuments { snapshot, error in
             guard let documents = snapshot?.documents else { return }
+
             self.groups = documents.map { doc in
                 let data = doc.data()
                 return GroupModel(
@@ -175,52 +199,49 @@ struct HomeView: View {
         }
     }
 
-    func fetchSessions() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+    func fetchTodaySessionCount() {
         let db = Firestore.firestore()
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
 
         db.collection("sessions")
-            .whereField("userId", isEqualTo: uid)
+            .whereField("sessionDate", isGreaterThanOrEqualTo: Timestamp(date: startOfDay))
+            .whereField("sessionDate", isLessThan: Timestamp(date: endOfDay))
             .getDocuments { snapshot, error in
                 if let error = error {
-                    print("Error fetching sessions: \(error.localizedDescription)")
+                    print("Error fetching today's sessions: \(error.localizedDescription)")
                     return
                 }
 
-                let now = Date()
-                let calendar = Calendar.current
-                var todayCount = 0
-                var nextUpcoming: SessionModel?
+                self.todaySessionCount = snapshot?.documents.count ?? 0
+            }
+    }
 
-                snapshot?.documents.forEach { doc in
-                    let data = doc.data()
-                    if let timestamp = data["date"] as? Timestamp {
-                        let sessionDate = timestamp.dateValue()
+    func fetchUpcomingSession() {
+        let now = Date()
+        let db = Firestore.firestore()
 
-                        // Count if session is today
-                        if calendar.isDateInToday(sessionDate) {
-                            todayCount += 1
-                        }
-
-                        // Find next upcoming session
-                        if sessionDate > now {
-                            let newSession = SessionModel(
-                                id: doc.documentID,
-                                title: data["title"] as? String ?? "Untitled",
-                                description: data["description"] as? String ?? "",
-                                time: data["time"] as? String ?? "",
-                                date: sessionDate
-                            )
-
-                            if nextUpcoming == nil || sessionDate < nextUpcoming!.date {
-                                nextUpcoming = newSession
-                            }
-                        }
-                    }
+        db.collection("sessions")
+            .whereField("sessionDate", isGreaterThan: Timestamp(date: now))
+            .order(by: "sessionDate")
+            .limit(to: 1)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print(" Error fetching upcoming session: \(error.localizedDescription)")
+                    return
                 }
 
-                self.todaySessionCount = todayCount
-                self.upcomingSession = nextUpcoming
+                if let doc = snapshot?.documents.first {
+                    let data = doc.data()
+                    if let timestamp = data["sessionDate"] as? Timestamp {
+                        self.upcomingSession = SessionModel(
+                            id: doc.documentID,
+                            sessionName: data["sessionName"] as? String ?? "Unnamed Session",
+                            groupName: data["groupName"] as? String ?? "Unknown Group",
+                            sessionDate: timestamp.dateValue()
+                        )
+                    }
+                }
             }
     }
 }
@@ -232,56 +253,27 @@ struct GradientGroupCardView: View {
     let members: String
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            VStack(alignment: .leading, spacing: 8) {
-                Spacer()
-                Text(title)
-                    .font(.title3)
-                    .bold()
-                    .foregroundColor(.white)
-                Text(subtitle)
-                    .foregroundColor(.white.opacity(0.9))
-                Spacer()
-            }
-            .padding()
-            .frame(width: 150, height: 150)
-            .background(gradient)
-            .cornerRadius(16)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
 
-            Text(members)
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.8))
+
+            Text("\(members) Members")
                 .font(.caption)
-                .padding(10)
-                .background(Color.white)
-                .clipShape(Circle())
-                .shadow(color: Color.black.opacity(0.2), radius: 4, x: -4, y: 2)
-                .offset(x: -10, y: -10)
-        }
-    }
-}
-
-struct UpcomingSessionCard: View {
-    var session: SessionModel
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(session.title)
-                    .font(.headline)
-                Text(session.description)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-            }
-            Spacer()
-            Text(session.time)
-                .foregroundColor(.gray)
+                .foregroundColor(.white.opacity(0.7))
         }
         .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .frame(width: 180, height: 120)
+        .background(gradient)
+        .cornerRadius(16)
+        .shadow(radius: 4)
     }
 }
 
-#Preview {
+#Preview{
     HomeView()
 }
