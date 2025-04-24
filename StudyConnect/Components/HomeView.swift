@@ -105,7 +105,11 @@ struct HomeView: View {
                     Text("Upcoming Session")
                         .font(.headline)
 
-                    UpcomingSessionCard()
+                    NavigationLink(destination: GroupMeetingView()) {
+                        UpcomingSessionCard()
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
 
                     Spacer()
                 }
