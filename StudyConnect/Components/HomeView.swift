@@ -150,7 +150,7 @@ struct HomeView: View {
     func upcomingSessionSection(session: SessionModel) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             NavigationLink(destination: GroupMeetingView()) {
-                VStack {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(session.sessionName)
                         .font(.title2)
                         .bold()
@@ -160,12 +160,16 @@ struct HomeView: View {
                         .foregroundColor(.gray)
                 }
                 .padding()
-                .background(Color.blue.opacity(0.1))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
             }
-            .buttonStyle(PlainButtonStyle())        }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal)
         .padding(.bottom)
     }
+
 
 
     func fetchUsername() {
