@@ -149,28 +149,24 @@ struct HomeView: View {
 
     func upcomingSessionSection(session: SessionModel) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Upcoming Session")
-                .font(.headline)
-                .padding(.top)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(session.sessionName)
-                    .font(.title2)
-                    .bold()
-
-                Text("Group: \(session.groupName)")
-                    .foregroundColor(.gray)
-
-                Text("Date: \(session.sessionDate.formatted(date: .abbreviated, time: .shortened))")
-                    .foregroundColor(.gray)
+            NavigationLink(destination: GroupMeetingView()) {
+                VStack {
+                    Text(session.sessionName)
+                        .font(.title2)
+                        .bold()
+                    Text("Group: \(session.groupName)")
+                        .foregroundColor(.gray)
+                    Text("Date: \(session.sessionDate.formatted(date: .abbreviated, time: .shortened))")
+                        .foregroundColor(.gray)
+                }
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(12)
             }
-            .padding()
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(12)
-            .padding(.horizontal)
-        }
+            .buttonStyle(PlainButtonStyle())        }
         .padding(.bottom)
     }
+
 
     func fetchUsername() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
