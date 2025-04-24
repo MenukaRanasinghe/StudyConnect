@@ -13,7 +13,7 @@ struct GroupMeetingView: View {
     @State private var transcribedText = ""
     @State private var summary = ""
     @State private var savedNotes: [String] = []
-    @State private var showPopup = false 
+    @State private var showPopup = false
     private let speechRecognizer = SpeechRecognizer()
 
     var body: some View {
@@ -100,7 +100,6 @@ struct GroupMeetingView: View {
                     .cornerRadius(10)
             }
             .padding(.horizontal)
-
             .alert(isPresented: $showPopup) {
                 Alert(
                     title: Text("Leave Meeting"),
@@ -114,6 +113,7 @@ struct GroupMeetingView: View {
         }
         .padding()
     }
+    
     func generateSummary(from text: String) -> String {
         let sentences = text.components(separatedBy: ". ").prefix(2)
         return sentences.joined(separator: ". ") + "."

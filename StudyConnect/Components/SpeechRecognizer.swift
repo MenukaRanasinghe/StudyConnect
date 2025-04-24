@@ -30,7 +30,7 @@ class SpeechRecognizer {
                 let inputNode = self.audioEngine.inputNode
                 let recordingFormat = inputNode.outputFormat(forBus: 0)
 
-                inputNode.removeTap(onBus: 0) // just in case
+                inputNode.removeTap(onBus: 0)
                 inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
                     self.request.append(buffer)
                 }
@@ -48,7 +48,7 @@ class SpeechRecognizer {
                     }
                 }
             } catch {
-                print("Audio setup error: \(error)")
+                print("Error setting up audio session or starting audio engine: \(error.localizedDescription)")
             }
         }
     }
