@@ -43,9 +43,10 @@ struct HomeView: View {
                     .cornerRadius(10)
 
                 exploreGroupsSection
-
                 if let session = upcomingSession {
                     upcomingSessionSection(session: session)
+                } else {
+                    dummySessionSection()
                 }
 
                 Spacer()
@@ -87,18 +88,10 @@ struct HomeView: View {
             .cornerRadius(8)
 
             NavigationLink(destination: NotificationsScreen()) {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: "bell.fill")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 16)
-                    if todaySessionCount > 0 {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 10, height: 10)
-                            .offset(x: 8, y: -8)
-                    }
-                }
+                Image(systemName: "bell.fill")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 16)
             }
         }
     }
@@ -175,6 +168,29 @@ struct HomeView: View {
         .padding(.bottom)
     }
 
+    func dummySessionSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            NavigationLink(destination: GroupMeetingView()) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("2015 maths paper discussion")
+                        .font(.title2)
+                        .bold()
+                    Text("Group: Calculus Study Group")
+                        .foregroundColor(.gray)
+                    Text("Tap to join the session")
+                        .foregroundColor(.gray)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(12)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal)
+        .padding(.bottom)
+    }
+
     func fetchUsername() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
@@ -215,7 +231,6 @@ struct HomeView: View {
                     print("Error fetching today's sessions: \(error.localizedDescription)")
                     return
                 }
-
                 self.todaySessionCount = snapshot?.documents.count ?? 0
             }
     }
@@ -230,7 +245,8 @@ struct HomeView: View {
             .limit(to: 1)
             .getDocuments { snapshot, error in
                 if let error = error {
-                    print(" Error fetching upcoming session: \(error.localizedDescription)")
+                    print("Error fetching upcoming session: \(error.localizedDescription)")
+                    self.upcomingSession = nil
                     return
                 }
 
@@ -243,7 +259,11 @@ struct HomeView: View {
                             groupName: data["groupName"] as? String ?? "Unknown Group",
                             sessionDate: timestamp.dateValue()
                         )
+                    } else {
+                        self.upcomingSession = nil
                     }
+                } else {
+                    self.upcomingSession = nil
                 }
             }
     }
@@ -260,11 +280,9 @@ struct GradientGroupCardView: View {
             Text(title)
                 .font(.headline)
                 .foregroundColor(.white)
-
             Text(subtitle)
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
-
             Text("\(members) Members")
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.7))
@@ -277,6 +295,6 @@ struct GradientGroupCardView: View {
     }
 }
 
-#Preview{
+#Preview {
     HomeView()
 }
