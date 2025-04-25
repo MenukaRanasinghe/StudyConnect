@@ -7,10 +7,14 @@
 
 import SwiftUI
 import PhotosUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct UserView: View {
     @State private var profileImage: UIImage?
     @State private var selectedItem: PhotosPickerItem?
+    @State private var userName: String = "Loading..."
+    @State private var userEmail: String = "Loading..."
 
     var body: some View {
         VStack(spacing: 20) {
@@ -23,6 +27,7 @@ struct UserView: View {
                 .font(.title2)
                 .bold()
                 .padding(.top, -30)
+
             PhotosPicker(selection: $selectedItem, matching: .images) {
                 ZStack {
                     if let image = profileImage {
@@ -56,10 +61,10 @@ struct UserView: View {
                 }
             }
 
-            Text("Nisha De Silva")
+            Text(userName)
                 .font(.headline)
 
-            Text("ndsilva@gmail.com")
+            Text(userEmail)
                 .foregroundColor(.blue)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -71,17 +76,15 @@ struct UserView: View {
                     NavigationLink(destination: UserGeneralView()){
                         profileIcon(title: "General", imageName: "General")
                     }
-                   
                     profileIcon(title: "Awards", imageName: "Awards")
                 }
-
                 HStack(spacing: 20) {
-                    profileIcon(title: "Recordings", imageName: "Recordings")
-                    
+                    NavigationLink(destination: UserRecordingsView()){
+                        profileIcon(title: "Recordings", imageName: "Recordings")
+                    }
                     NavigationLink(destination: UserNotesView()){
                         profileIcon(title: "Notes", imageName: "Notes")
                     }
-                    
                 }
             }
 
@@ -89,6 +92,31 @@ struct UserView: View {
         }
         .padding(.top, 30)
         .padding(.horizontal)
+        .task {
+            await loadUserInfo()
+        }
+    }
+
+    func loadUserInfo() async {
+        guard let user = Auth.auth().currentUser else {
+            userName = "Not logged in"
+            userEmail = "-"
+            return
+        }
+        userEmail = user.email ?? "-"
+
+        let uid = user.uid
+        let docRef = Firestore.firestore().collection("users").document(uid)
+        do {
+            let document = try await docRef.getDocument()
+            if let data = document.data(), let name = data["name"] as? String {
+                userName = name
+            } else {
+                userName = "Unknown Name"
+            }
+        } catch {
+            userName = "Unknown Name"
+        }
     }
 
     func profileIcon(title: String, imageName: String) -> some View {
