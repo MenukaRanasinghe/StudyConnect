@@ -15,6 +15,8 @@ struct FindView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var userPins: [UserPin] = []
 
+    let pinColors: [Color] = [.red, .blue, .green, .orange, .purple, .pink, .teal, .indigo]
+
     var body: some View {
         ZStack(alignment: .top) {
             Map(coordinateRegion: $locationManager.region,
@@ -32,7 +34,7 @@ struct FindView: View {
 
                         Image(systemName: "mappin.and.ellipse")
                             .font(.title2)
-                            .foregroundColor(.red)
+                            .foregroundColor(user.color)
                     }
                 }
             }
@@ -82,22 +84,48 @@ struct FindView: View {
             }
 
             var pins: [UserPin] = []
+            var colorIndex = 0
+            let group = DispatchGroup()
 
             for document in snapshot?.documents ?? [] {
                 let data = document.data()
                 let name = data["name"] as? String ?? "Unknown"
+                let locationString = data["location"] as? String ?? ""
 
-                if let geoPoint = data["location"] as? GeoPoint {
-                    let coordinate = CLLocationCoordinate2D(latitude: geoPoint.latitude, longitude: geoPoint.longitude)
-                    pins.append(UserPin(name: name, coordinate: coordinate))
+                group.enter()
+                geocodeLocation(locationString) { coordinate in
+                    if let coordinate = coordinate {
+                        let color = pinColors[colorIndex % pinColors.count]
+                        pins.append(UserPin(name: name, coordinate: coordinate, color: color))
+                        colorIndex += 1
+                    }
+                    group.leave()
                 }
             }
 
-            DispatchQueue.main.async {
+            group.notify(queue: .main) {
                 self.userPins = pins
             }
         }
     }
+
+    func geocodeLocation(_ location: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(location) { placemarks, error in
+            if let coordinate = placemarks?.first?.location?.coordinate {
+                completion(coordinate)
+            } else {
+                print("Geocoding failed for \(location): \(error?.localizedDescription ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
+}
+struct UserPin: Identifiable {
+    let id = UUID()
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+    let color: Color
 }
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
@@ -126,12 +154,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
-}
-
-struct UserPin: Identifiable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
 }
 
 struct FindView_Previews: PreviewProvider {
