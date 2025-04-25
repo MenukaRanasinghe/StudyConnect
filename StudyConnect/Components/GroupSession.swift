@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct GroupSessionsView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedDate = 20
     @State private var isShowingAddSession = false
 
@@ -22,7 +23,12 @@ struct GroupSessionsView: View {
                 VStack(spacing: 0) {
                     VStack(spacing: 15) {
                         HStack {
-                            Button(action: {}) {
+                            Button(action: {
+                                dismiss()
+                            }) {
+                                Image(systemName: "chevron.left")
+                                    .foregroundColor(.white)
+                                    .padding()
                             }
                             Spacer()
                             Text("Calculus")
@@ -30,7 +36,7 @@ struct GroupSessionsView: View {
                                 .bold()
                                 .foregroundColor(.white)
                             Spacer()
-                            Spacer().frame(width: 4)
+                            Spacer().frame(width: 44)
                         }
                         .padding(.top, 50)
 
@@ -74,6 +80,7 @@ struct GroupSessionsView: View {
                         sessionRow(title: "2016 Paper Discussion", instructor: "D.S.Silva", time: "12 PM")
                         sessionRow(title: "2018 Paper Discussion", instructor: "D.S.Silva", time: "12 PM")
                         sessionRow(title: "2021 Paper Discussion", instructor: "A.N.Ranasinghe", time: "1 PM")
+
                         HStack {
                             Spacer()
                             NavigationLink(destination: AddSessionView(groupName: "Calculus")) {

@@ -18,14 +18,17 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct StudyConnectApp: App {
-    
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let persistenceController = PersistenceController.shared
-    
+
+    @StateObject private var coordinator = NavigationCoordinator()
+
     var body: some Scene {
         WindowGroup {
-            Splash()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            NavigationStack(path: $coordinator.path) {
+                Splash()
+            }
+            .environmentObject(coordinator)
         }
     }
 }
