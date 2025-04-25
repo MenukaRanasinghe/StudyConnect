@@ -9,8 +9,17 @@ import SwiftUI
 
 class NavigationCoordinator: ObservableObject {
     @Published var path = NavigationPath()
-    
-    func resetToRoot() {
-        path = NavigationPath()
+
+    func push<T: Hashable>(_ value: T) {
+        path.append(value)
+    }
+
+    func pop() {
+        path.removeLast()
+    }
+
+    func popToRoot() {
+        path.removeLast(path.count)
     }
 }
+

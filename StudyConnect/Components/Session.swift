@@ -9,18 +9,36 @@ import SwiftUI
 import Speech
 
 struct GroupMeetingView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var isRecording = false
     @State private var transcribedText = ""
     @State private var summary = ""
     @State private var savedNotes: [String] = []
     @State private var showPopup = false
+
+    let loggedInUser = "Menuka Silva"
+    let participants = ["Alex Perera", "Nimali Gunasekara", "Kasun Jayasuriya", "Tharindu Fernando", "Thisara Dissanayake", "Saman Silva"]
+
     private let speechRecognizer = SpeechRecognizer()
 
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+
                 HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                        .foregroundColor(.blue)
+                        .font(.headline)
+                    }
+
                     Spacer()
+
                     Button(action: {
                         if isRecording {
                             speechRecognizer.stopTranscribing()
@@ -34,31 +52,74 @@ struct GroupMeetingView: View {
                         }
                         isRecording.toggle()
                     }) {
-                        Label(isRecording ? "Stop Recording" : "Record Session", systemImage: isRecording ? "stop.circle.fill" : "mic.circle.fill")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(isRecording ? Color.red : Color.blue)
-                            .cornerRadius(10)
+                        Label(isRecording ? "Stop Recording" : "Record Session",
+                              systemImage: isRecording ? "stop.circle.fill" : "mic.circle.fill")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(isRecording ? Color.red : Color.blue)
+                        .cornerRadius(10)
                     }
                 }
-                .padding(.top, 20)
-                .padding(.trailing, 20)
+                .padding(.top, 10)
+                .padding(.horizontal)
 
                 Text("Group Meeting")
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
-                Image(systemName: "person.3.sequence.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-                    .foregroundColor(.blue)
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                        
+                        VStack(spacing: 8) {
+                            ZStack(alignment: .topTrailing) {
+                                Rectangle()
+                                    .fill(Color.blue.opacity(0.8))
+                                    .frame(height: 120)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        Text(initials(from: loggedInUser))
+                                            .font(.largeTitle)
+                                            .bold()
+                                            .foregroundColor(.white)
+                                    )
 
-                Text("You're now in the group meeting room.")
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
+                                HStack(spacing: 8) {
+                                    Image(systemName: "mic.fill")
+                                    Image(systemName: "video.fill")
+                                }
+                                .foregroundColor(.white)
+                                .padding(6)
+                                .background(Color.black.opacity(0.5))
+                                .cornerRadius(8)
+                                .padding(6)
+                            }
+                            Text(loggedInUser)
+                                .font(.caption)
+                                .bold()
+                                .multilineTextAlignment(.center)
+                        }
+
+                        ForEach(participants, id: \.self) { participant in
+                            VStack(spacing: 8) {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.5))
+                                    .frame(height: 120)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        Text(initials(from: participant))
+                                            .font(.largeTitle)
+                                            .bold()
+                                            .foregroundColor(.white)
+                                    )
+                                Text(participant)
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                    }
                     .padding(.horizontal)
+                }
 
                 if !transcribedText.isEmpty {
                     VStack(alignment: .leading) {
@@ -113,10 +174,10 @@ struct GroupMeetingView: View {
                 }
             }
             .padding()
+            .navigationBarHidden(true)
         }
-        .navigationBarHidden(true)
     }
-    
+
     func generateSummary(from text: String) -> String {
         let sentences = text.components(separatedBy: ". ").prefix(2)
         return sentences.joined(separator: ". ") + "."
@@ -127,6 +188,12 @@ struct GroupMeetingView: View {
             summary = generateSummary(from: transcribedText)
         }
         savedNotes.append(summary)
+    }
+
+    func initials(from name: String) -> String {
+        let components = name.components(separatedBy: " ")
+        let initials = components.compactMap { $0.first }.prefix(2)
+        return initials.map { String($0) }.joined().uppercased()
     }
 }
 
