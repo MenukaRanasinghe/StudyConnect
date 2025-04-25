@@ -12,75 +12,63 @@ import FirebaseFirestore
 struct NotificationsScreen: View {
     @State private var sessions: [Session] = []
     @State private var isLoading = true
-    
+
     let today = Calendar.current.startOfDay(for: Date())
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                HStack {
-                    Button(action: {
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.black)
-                    }
-                    .padding(.leading)
-
-                    Text("Notifications")
-                        .font(.title)
-                        .bold()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
-                    Spacer()
-                }
-                .padding()
-
-                HStack {
-                    Text("Today, \(formattedDate())")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                        .padding(.leading)
-                    
-                    Spacer()
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Today, \(formattedDate())")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal)
 
                 if isLoading {
-                    ProgressView("Loading Sessions...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .padding()
+                    HStack {
+                        Spacer()
+                        ProgressView("Loading Sessions...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                        Spacer()
+                    }
+                    .padding()
                 } else {
                     if sessions.isEmpty {
                         Text("No sessions today!")
                             .font(.headline)
-                            .padding()
+                            .padding(.horizontal)
                     } else {
                         Text("You have sessions today:")
                             .font(.headline)
-                            .padding(.top, 10)
+                            .padding(.horizontal)
 
-                        List(sessions) { session in
-                            VStack(alignment: .leading) {
-                                Text(session.sessionName)
-                                    .font(.headline)
-                                
-                                Text(session.sessionDate, style: .time)
-                                    .foregroundColor(.gray)
-                                
-                                Text(session.groupName)
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
+                        VStack(spacing: 12) {
+                            ForEach(sessions) { session in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(session.sessionName)
+                                        .font(.headline)
+
+                                    Text(session.sessionDate, style: .time)
+                                        .foregroundColor(.gray)
+
+                                    Text(session.groupName)
+                                        .font(.subheadline)
+                                        .foregroundColor(.blue)
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
+                                .padding(.horizontal)
                             }
-                            .padding()
                         }
                     }
                 }
             }
-            .onAppear {
-                fetchSessionsForToday()
-            }
-            .navigationTitle("")
-            .navigationBarHidden(true)
+            .padding(.top)
+        }
+        .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            fetchSessionsForToday()
         }
     }
 
@@ -88,7 +76,7 @@ struct NotificationsScreen: View {
         let db = Firestore.firestore()
         db.collection("sessions")
             .whereField("sessionDate", isGreaterThanOrEqualTo: today)
-            .whereField("sessionDate", isLessThanOrEqualTo: today.addingTimeInterval(24 * 60 * 60)) 
+            .whereField("sessionDate", isLessThanOrEqualTo: today.addingTimeInterval(24 * 60 * 60))
             .getDocuments { snapshot, error in
                 if let error = error {
                     print("Error fetching sessions: \(error.localizedDescription)")
@@ -121,5 +109,7 @@ struct Session: Identifiable, Codable {
 }
 
 #Preview {
-    NotificationsScreen()
+    NavigationStack {
+        NotificationsScreen()
+    }
 }
