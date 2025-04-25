@@ -15,12 +15,6 @@ struct UserView: View {
     var body: some View {
         VStack(spacing: 20) {
             HStack {
-                Button(action: {
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                        .font(.title2)
-                }
                 Spacer()
             }
             .padding(.horizontal)

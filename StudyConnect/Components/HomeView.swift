@@ -33,7 +33,6 @@ struct HomeView: View {
     @State private var upcomingSession: SessionModel?
 
     var body: some View {
-        NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     headerSection
@@ -53,14 +52,14 @@ struct HomeView: View {
                 }
                 .padding()
             }
-            .navigationBarHidden(true)
+            .navigationBarHidden(false)
             .onAppear {
                 fetchUsername()
                 fetchGroups()
                 fetchTodaySessionCount()
                 fetchUpcomingSession()
             }
-        }
+        
     }
 
     var headerSection: some View {
