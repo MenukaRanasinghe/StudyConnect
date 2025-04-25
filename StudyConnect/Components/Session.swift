@@ -9,6 +9,7 @@ import SwiftUI
 import Speech
 
 struct GroupMeetingView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var isRecording = false
     @State private var transcribedText = ""
     @State private var summary = ""
@@ -20,6 +21,15 @@ struct GroupMeetingView: View {
         NavigationView {
             VStack(spacing: 20) {
                 HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.blue)
+                            .font(.title2)
+                            .padding()
+                    }
+
                     Spacer()
                     Button(action: {
                         if isRecording {
@@ -43,7 +53,7 @@ struct GroupMeetingView: View {
                     }
                 }
                 .padding(.top, 20)
-                .padding(.trailing, 20)
+                .padding(.horizontal)
 
                 Text("Group Meeting")
                     .font(.largeTitle)
@@ -113,10 +123,10 @@ struct GroupMeetingView: View {
                 }
             }
             .padding()
+            .navigationBarHidden(true)
         }
-        .navigationBarHidden(true)
     }
-    
+
     func generateSummary(from text: String) -> String {
         let sentences = text.components(separatedBy: ". ").prefix(2)
         return sentences.joined(separator: ". ") + "."
