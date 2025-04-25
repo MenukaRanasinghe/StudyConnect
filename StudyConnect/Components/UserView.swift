@@ -79,7 +79,9 @@ struct UserView: View {
                     profileIcon(title: "Awards", imageName: "Awards")
                 }
                 HStack(spacing: 20) {
-                    profileIcon(title: "Recordings", imageName: "Recordings")
+                    NavigationLink(destination: UserRecordingsView()){
+                        profileIcon(title: "Recordings", imageName: "Recordings")
+                    }
                     NavigationLink(destination: UserNotesView()){
                         profileIcon(title: "Notes", imageName: "Notes")
                     }
