@@ -23,18 +23,28 @@ struct FindView: View {
                 showsUserLocation: true,
                 annotationItems: userPins) { user in
                 MapAnnotation(coordinate: user.coordinate) {
-                    VStack(spacing: 2) {
+                    VStack(spacing: 0) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.red.opacity(0.2))
+                                .frame(width: 44, height: 44)
+                                .shadow(color: user.color.opacity(0.5), radius: 8, x: 0, y: 4)
+                            Image(systemName: "mappin")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 28, height: 28)
+                                .foregroundColor(user.color)
+                        }
+                        .offset(y: -10)
                         Text(user.name)
                             .font(.caption)
                             .bold()
-                            .padding(5)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .shadow(radius: 2)
-
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.title2)
-                            .foregroundColor(user.color)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(6)
+                            .shadow(radius: 1)
+                            .offset(y: -4)
                     }
                 }
             }
@@ -121,6 +131,7 @@ struct FindView: View {
         }
     }
 }
+
 struct UserPin: Identifiable {
     let id = UUID()
     let name: String
