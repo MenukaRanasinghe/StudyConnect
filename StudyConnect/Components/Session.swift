@@ -15,6 +15,7 @@ struct GroupMeetingView: View {
     @State private var summary = ""
     @State private var savedNotes: [String] = []
     @State private var showPopup = false
+    @State private var navigateToHome = false
 
     let loggedInUser = "Menuka Silva"
     let participants = ["Alex Perera", "Nimali Gunasekara", "Kasun Jayasuriya", "Tharindu Fernando", "Thisara Dissanayake", "Saman Silva"]
@@ -168,9 +169,13 @@ struct GroupMeetingView: View {
                         message: Text("Would you like to summarize and save the meeting notes?"),
                         primaryButton: .default(Text("Summarize and Save")) {
                             saveNote()
+                            navigateToHome = true
                         },
                         secondaryButton: .cancel()
                     )
+                }
+                NavigationLink(destination: HomeView(), isActive: $navigateToHome) {
+                    EmptyView()
                 }
             }
             .padding()

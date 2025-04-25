@@ -33,33 +33,32 @@ struct HomeView: View {
     @State private var upcomingSession: SessionModel?
 
     var body: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    headerSection
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                headerSection
 
-                    TextField("Search Study Group", text: .constant(""))
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                TextField("Search Study Group", text: .constant(""))
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
 
-                    exploreGroupsSection
+                exploreGroupsSection
 
-                    if let session = upcomingSession {
-                        upcomingSessionSection(session: session)
-                    }
-
-                    Spacer()
+                if let session = upcomingSession {
+                    upcomingSessionSection(session: session)
                 }
-                .padding()
+
+                Spacer()
             }
-            .navigationBarHidden(false)
-            .onAppear {
-                fetchUsername()
-                fetchGroups()
-                fetchTodaySessionCount()
-                fetchUpcomingSession()
-            }
-        
+            .padding()
+        }
+        .navigationBarHidden(false)
+        .onAppear {
+            fetchUsername()
+            fetchGroups()
+            fetchTodaySessionCount()
+            fetchUpcomingSession()
+        }
     }
 
     var headerSection: some View {
@@ -88,10 +87,18 @@ struct HomeView: View {
             .cornerRadius(8)
 
             NavigationLink(destination: NotificationsScreen()) {
-                Image(systemName: "bell.fill")
-                    .font(.title2)
-                    .foregroundColor(.gray)
-                    .padding(.horizontal, 16)
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "bell.fill")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 16)
+                    if todaySessionCount > 0 {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 10, height: 10)
+                            .offset(x: 8, y: -8)
+                    }
+                }
             }
         }
     }
@@ -129,7 +136,6 @@ struct HomeView: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
-
                         NavigationLink(destination: GroupDetailsView(groupName: group.name)) {
                             GradientGroupCardView(
                                 gradient: gradient,
@@ -168,8 +174,6 @@ struct HomeView: View {
         .padding(.horizontal)
         .padding(.bottom)
     }
-
-
 
     func fetchUsername() {
         guard let uid = Auth.auth().currentUser?.uid else { return }

@@ -15,24 +15,36 @@ struct FindView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var userPins: [UserPin] = []
 
+    let pinColors: [Color] = [.red, .blue, .green, .orange, .purple, .pink, .teal, .indigo]
+
     var body: some View {
         ZStack(alignment: .top) {
             Map(coordinateRegion: $locationManager.region,
                 showsUserLocation: true,
                 annotationItems: userPins) { user in
                 MapAnnotation(coordinate: user.coordinate) {
-                    VStack(spacing: 2) {
+                    VStack(spacing: 0) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.red.opacity(0.2))
+                                .frame(width: 44, height: 44)
+                                .shadow(color: user.color.opacity(0.5), radius: 8, x: 0, y: 4)
+                            Image(systemName: "mappin")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 28, height: 28)
+                                .foregroundColor(user.color)
+                        }
+                        .offset(y: -10)
                         Text(user.name)
                             .font(.caption)
                             .bold()
-                            .padding(5)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .shadow(radius: 2)
-
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.title2)
-                            .foregroundColor(.red)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(6)
+                            .shadow(radius: 1)
+                            .offset(y: -4)
                     }
                 }
             }
@@ -82,22 +94,49 @@ struct FindView: View {
             }
 
             var pins: [UserPin] = []
+            var colorIndex = 0
+            let group = DispatchGroup()
 
             for document in snapshot?.documents ?? [] {
                 let data = document.data()
                 let name = data["name"] as? String ?? "Unknown"
+                let locationString = data["location"] as? String ?? ""
 
-                if let geoPoint = data["location"] as? GeoPoint {
-                    let coordinate = CLLocationCoordinate2D(latitude: geoPoint.latitude, longitude: geoPoint.longitude)
-                    pins.append(UserPin(name: name, coordinate: coordinate))
+                group.enter()
+                geocodeLocation(locationString) { coordinate in
+                    if let coordinate = coordinate {
+                        let color = pinColors[colorIndex % pinColors.count]
+                        pins.append(UserPin(name: name, coordinate: coordinate, color: color))
+                        colorIndex += 1
+                    }
+                    group.leave()
                 }
             }
 
-            DispatchQueue.main.async {
+            group.notify(queue: .main) {
                 self.userPins = pins
             }
         }
     }
+
+    func geocodeLocation(_ location: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(location) { placemarks, error in
+            if let coordinate = placemarks?.first?.location?.coordinate {
+                completion(coordinate)
+            } else {
+                print("Geocoding failed for \(location): \(error?.localizedDescription ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
+}
+
+struct UserPin: Identifiable {
+    let id = UUID()
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+    let color: Color
 }
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
@@ -126,12 +165,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
-}
-
-struct UserPin: Identifiable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
 }
 
 struct FindView_Previews: PreviewProvider {

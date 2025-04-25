@@ -9,9 +9,18 @@ import SwiftUI
 import Firebase
 import FirebaseFirestore
 
+struct Session: Identifiable {
+    var id: String
+    var sessionName: String
+    var sessionDate: Date
+    var groupName: String
+}
+
 struct NotificationsScreen: View {
     @State private var sessions: [Session] = []
     @State private var isLoading = true
+
+    @Environment(\.dismiss) private var dismiss
 
     let today = Calendar.current.startOfDay(for: Date())
 
@@ -41,30 +50,40 @@ struct NotificationsScreen: View {
                             .font(.headline)
                             .padding(.horizontal)
 
-                        VStack(spacing: 12) {
-                            ForEach(sessions) { session in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(session.sessionName)
-                                        .font(.headline)
-
-                                    Text(session.sessionDate, style: .time)
-                                        .foregroundColor(.gray)
-
-                                    Text(session.groupName)
-                                        .font(.subheadline)
-                                        .foregroundColor(.blue)
+                        HStack {
+                            Spacer()
+                            VStack(spacing: 16) {
+                                ForEach(sessions) { session in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Text(session.sessionName)
+                                                .font(.headline)
+                                            Spacer()
+                                            Text(session.sessionDate, style: .time)
+                                                .foregroundColor(.gray)
+                                                .font(.subheadline)
+                                        }
+                                        Text(session.groupName)
+                                            .font(.subheadline)
+                                            .foregroundColor(.blue)
+                                    }
+                                    .padding()
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+                                    .frame(maxWidth: 500)
                                 }
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(10)
-                                .padding(.horizontal)
                             }
+                            .frame(maxWidth: .infinity)
+                            Spacer()
                         }
                     }
                 }
             }
             .padding(.top)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground).ignoresSafeArea())
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -86,7 +105,19 @@ struct NotificationsScreen: View {
 
                 if let snapshot = snapshot {
                     sessions = snapshot.documents.compactMap { document in
-                        try? document.data(as: Session.self)
+                        let data = document.data()
+                        guard let sessionName = data["sessionName"] as? String,
+                              let groupName = data["groupName"] as? String,
+                              let timestamp = data["sessionDate"] as? Timestamp else {
+                            return nil
+                        }
+                        let sessionDate = timestamp.dateValue()
+                        return Session(
+                            id: document.documentID,
+                            sessionName: sessionName,
+                            sessionDate: sessionDate,
+                            groupName: groupName
+                        )
                     }
                 }
 
@@ -101,15 +132,6 @@ struct NotificationsScreen: View {
     }
 }
 
-struct Session: Identifiable, Codable {
-    @DocumentID var id: String?
-    var sessionName: String
-    var sessionDate: Date
-    var groupName: String
-}
-
-#Preview {
-    NavigationStack {
-        NotificationsScreen()
-    }
+#Preview{
+    NotificationsScreen()
 }
