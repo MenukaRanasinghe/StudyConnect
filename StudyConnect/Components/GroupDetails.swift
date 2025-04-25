@@ -14,12 +14,6 @@ struct GroupDetailsView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Button(action: {
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.black)
-                    }
 
                     Spacer()
 
@@ -63,7 +57,7 @@ struct GroupDetailsView: View {
                 Text("Upcoming Session")
                     .font(.headline)
                     .padding(.horizontal)
-                NavigationLink(destination: AddSessionView(groupName: groupName)) {
+                NavigationLink(destination: GroupSessionsView()) {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Calculus")
@@ -85,6 +79,8 @@ struct GroupDetailsView: View {
                     .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 3)
                     .padding(.horizontal)
                 }
+
+
 
                 Spacer()
             }

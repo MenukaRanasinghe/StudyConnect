@@ -24,16 +24,6 @@ struct UserGeneralView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                HStack {
-                    Button(action: {
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                            .font(.title2)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal)
 
                 Text("Edit Profile")
                     .font(.title3)

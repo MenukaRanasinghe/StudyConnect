@@ -20,12 +20,9 @@ struct GroupSessionsView: View {
                 Color(.systemGray6).edgesIgnoringSafeArea(.all)
 
                 VStack(spacing: 0) {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 15) {
                         HStack {
                             Button(action: {}) {
-                                Image(systemName: "chevron.left")
-                                    .foregroundColor(.white)
-                                    .padding()
                             }
                             Spacer()
                             Text("Calculus")
@@ -33,7 +30,7 @@ struct GroupSessionsView: View {
                                 .bold()
                                 .foregroundColor(.white)
                             Spacer()
-                            Spacer().frame(width: 44)
+                            Spacer().frame(width: 4)
                         }
                         .padding(.top, 50)
 
@@ -67,6 +64,7 @@ struct GroupSessionsView: View {
                     .frame(height: 350)
                     .clipShape(RoundedCorner(radius: 0, corners: [.bottomLeft, .bottomRight]))
                     .ignoresSafeArea(edges: .top)
+
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Sessions")
                             .font(.headline)
@@ -76,21 +74,9 @@ struct GroupSessionsView: View {
                         sessionRow(title: "2016 Paper Discussion", instructor: "D.S.Silva", time: "12 PM")
                         sessionRow(title: "2018 Paper Discussion", instructor: "D.S.Silva", time: "12 PM")
                         sessionRow(title: "2021 Paper Discussion", instructor: "A.N.Ranasinghe", time: "1 PM")
-
-                        Spacer()
-
                         HStack {
                             Spacer()
-                            NavigationLink(value: "AddSession") {
-                                EmptyView()
-                            }
-                            .navigationDestination(for: String.self) { _ in
-                                AddSessionView(groupName: "Calculus")
-                            }
-
-                            Button(action: {
-                                isShowingAddSession = true
-                            }) {
+                            NavigationLink(destination: AddSessionView(groupName: "Calculus")) {
                                 Image(systemName: "plus")
                                     .foregroundColor(.white)
                                     .padding()
@@ -98,15 +84,18 @@ struct GroupSessionsView: View {
                                     .clipShape(Circle())
                                     .shadow(radius: 5)
                             }
-                            .padding()
+                            Spacer()
                         }
+                        .padding(.top, 10)
+
+                        Spacer()
                     }
                     .padding(.top, 25)
                     .background(
                         Color.white
                             .clipShape(RoundedCorner(radius: 30, corners: [.topLeft, .topRight]))
                     )
-                    .offset(y:-70)
+                    .offset(y: -70)
                     .frame(height: 630)
                     .ignoresSafeArea(edges: .bottom)
                 }
